@@ -1,0 +1,24 @@
+name: Sync Amrod Categories
+
+on:
+  workflow_dispatch:
+
+jobs:
+  sync-categories:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Run category sync
+        env:
+          AMROD_USERNAME: ${{ secrets.AMROD_USERNAME }}
+          AMROD_PASSWORD: ${{ secrets.AMROD_PASSWORD }}
+          AMROD_CUSTOMER_CODE: ${{ secrets.AMROD_CUSTOMER_CODE }}
+          SHOPIFY_STORE: ${{ secrets.SHOPIFY_STORE }}
+          SHOPIFY_TOKEN: ${{ secrets.SHOPIFY_TOKEN }}
+        run: node categories-fetch-once/index.js

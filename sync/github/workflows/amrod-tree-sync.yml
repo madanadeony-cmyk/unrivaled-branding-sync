@@ -1,0 +1,90 @@
+name: Amrod → Shopify Sync
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  category_tree:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    env:
+      SHOPIFY_STORE: ${{ secrets.SHOPIFY_STORE }}
+      SHOPIFY_TOKEN: ${{ secrets.SHOPIFY_TOKEN }}
+
+      AMROD_USERNAME: ${{ secrets.AMROD_USERNAME }}
+      AMROD_PASSWORD: ${{ secrets.AMROD_PASSWORD }}
+      AMROD_CUSTOMER_CODE: ${{ secrets.AMROD_CUSTOMER_CODE }}
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Debug paths (one-time)
+        working-directory: tree-map-import
+        run: |
+          pwd
+          ls -la
+          find . -maxdepth 4 -path "*index.js" -print
+
+      - name: Sync category tree metaobjects
+        working-directory: tree-map-import
+        run: node index.js
+
+      - name: Upload category tree logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: category-tree-logs
+          path: tree-map-import/logs/**/*.jsonl
+          if-no-files-found: ignore
+
+  product_import:
+    needs: category_tree
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0,1,2,3,4,5,6,7]
+
+    env:
+      SHOPIFY_STORE: ${{ secrets.SHOPIFY_STORE }}
+      SHOPIFY_TOKEN: ${{ secrets.SHOPIFY_TOKEN }}
+
+      AMROD_USERNAME: ${{ secrets.AMROD_USERNAME }}
+      AMROD_PASSWORD: ${{ secrets.AMROD_PASSWORD }}
+      AMROD_CUSTOMER_CODE: ${{ secrets.AMROD_CUSTOMER_CODE }}
+
+      CONCURRENCY: "3"
+      IMAGES_MODE: "default+colours"
+
+      SHARD_COUNT: "8"
+      SHARD_INDEX: "${{ matrix.shard }}"
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Run product import (shard ${{ matrix.shard }})
+        working-directory: tree-map-import
+        run: node index.js
+
+      - name: Upload product import logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: product-import-logs-shard-${{ matrix.shard }}
+          path: tree-map-import/logs/**/*.jsonl
+          if-no-files-found: ignore

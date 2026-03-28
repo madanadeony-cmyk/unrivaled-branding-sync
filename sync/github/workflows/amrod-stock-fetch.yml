@@ -1,0 +1,29 @@
+name: Fetch Product Stock Once
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  stock:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+
+    env:
+      SHOPIFY_STORE: ${{ secrets.SHOPIFY_STORE }}
+      SHOPIFY_TOKEN: ${{ secrets.SHOPIFY_TOKEN }}
+      SHOPIFY_API_VERSION: "2026-01"
+
+      AMROD_USERNAME: ${{ secrets.AMROD_USERNAME }}
+      AMROD_PASSWORD: ${{ secrets.AMROD_PASSWORD }}
+      AMROD_CUSTOMER_CODE: ${{ secrets.AMROD_CUSTOMER_CODE }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Fetch and apply stock
+        working-directory: Amrod-stock
+        run: node stock-fetch.js

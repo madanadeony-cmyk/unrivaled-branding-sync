@@ -1,0 +1,62 @@
+name: Amrod → Shopify Product Import
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 330   # ~5.5 hours per shard
+
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0,1,2,3,4,5,6,7]   # 8 shards
+
+    env:
+      # -----------------
+      # Secrets
+      # -----------------
+      SHOPIFY_STORE: ${{ secrets.SHOPIFY_STORE }}
+      SHOPIFY_TOKEN: ${{ secrets.SHOPIFY_TOKEN }}
+
+      AMROD_USERNAME: ${{ secrets.AMROD_USERNAME }}
+      AMROD_PASSWORD: ${{ secrets.AMROD_PASSWORD }}
+      AMROD_CUSTOMER_CODE: ${{ secrets.AMROD_CUSTOMER_CODE }}
+
+      # -----------------
+      # Speed controls
+      # -----------------
+      CONCURRENCY: "3"
+      IMAGES_MODE: "default+colours"
+
+      # -----------------
+      # Sharding
+      # -----------------
+      SHARD_COUNT: "8"
+      SHARD_INDEX: "${{ matrix.shard }}"
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        working-directory: product-fetch-once
+        run: npm install --no-audit --no-fund
+
+      - name: Run product import (shard ${{ matrix.shard }})
+        working-directory: product-fetch-once
+        run: node index.js
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sync-logs-shard-${{ matrix.shard }}
+          path: product-fetch-once/logs/**/*.jsonl
+          if-no-files-found: ignore

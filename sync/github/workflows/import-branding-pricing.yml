@@ -1,0 +1,33 @@
+name: Import Amrod Branding Pricing
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  import_branding_pricing:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    env:
+      # Shopify
+      SHOPIFY_STORE: ${{ secrets.SHOPIFY_STORE }}
+      SHOPIFY_TOKEN: ${{ secrets.SHOPIFY_TOKEN }}
+      SHOPIFY_API_VERSION: "2026-01"
+
+      # Amrod
+      AMROD_USERNAME: ${{ secrets.AMROD_USERNAME }}
+      AMROD_PASSWORD: ${{ secrets.AMROD_PASSWORD }}
+      AMROD_CUSTOMER_CODE: ${{ secrets.AMROD_CUSTOMER_CODE }}
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Import branding pricing
+        working-directory: product-fetch-once
+        run: node pricing-sync.js

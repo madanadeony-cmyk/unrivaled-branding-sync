@@ -1,0 +1,33 @@
+name: (Bulk) Fetch Product Pricing Once
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  pricing:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+
+    env:
+      SHOPIFY_STORE: ${{ secrets.SHOPIFY_STORE }}
+      SHOPIFY_TOKEN: ${{ secrets.SHOPIFY_TOKEN }}
+      SHOPIFY_API_VERSION: "2026-01"
+
+      AMROD_USERNAME: ${{ secrets.AMROD_USERNAME }}
+      AMROD_PASSWORD: ${{ secrets.AMROD_PASSWORD }}
+      AMROD_CUSTOMER_CODE: ${{ secrets.AMROD_CUSTOMER_CODE }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Build variant map (SKU -> Variant GID)
+        working-directory: price-fetch-once
+        run: node prices-build-variant-map.js
+
+      - name: Apply prices (Bulk operation)
+        working-directory: price-fetch-once
+        run: node price-apply-bulk.js

@@ -1,0 +1,45 @@
+name: Transfer Inventory
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 3 * * *" # Daily at 3am
+
+jobs:
+  transfer:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Dependencies
+        run: |
+          npm install node-fetch
+
+      - name: Run Inventory Transfer
+        env:
+          # AMROD
+          AMROD_USERNAME: ${{ secrets.AMROD_USERNAME }}
+          AMROD_PASSWORD: ${{ secrets.AMROD_PASSWORD }}
+          AMROD_CUSTOMER_CODE: ${{ secrets.AMROD_CUSTOMER_CODE }}
+
+          # SHOPIFY
+          SHOPIFY_STORE: ${{ secrets.SHOPIFY_STORE }}
+          SHOPIFY_TOKEN: ${{ secrets.SHOPIFY_TOKEN }}
+
+          # LOCATIONS
+          SOURCE_LOCATION_ID: ${{ secrets.SOURCE_LOCATION_ID }}
+          TARGET_LOCATION_IDS: ${{ secrets.TARGET_LOCATION_IDS }}
+
+          # OPTIONAL
+          AMROD_TEST_LIMIT: ${{ secrets.AMROD_TEST_LIMIT }}
+          LOG_DIR: logs
+
+        run: |
+          node transferInventory.js
