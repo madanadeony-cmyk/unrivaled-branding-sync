@@ -1,0 +1,8 @@
+# Amrod Stock Fetcher
+
+Fetches stock from:
+https://vendorapi.amrod.co.za/api/v1/Stock/
+
+## Usage
+```bash
+AMROD_TOKEN=xxxxx node index.js

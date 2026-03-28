@@ -1,0 +1,7 @@
+{
+  "name": "amrod-product-sync",
+  "type": "module",
+  "scripts": {
+    "sync:categories": "node categories-fetch-once/index.js"
+  }
+}
